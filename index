@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024, initial-scale=1.0">
+<title>준우네 가계부 v5.0</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#f5f2ee;--card:#ffffff;
+  --sage:#8faf88;--sage-light:#d8ebd4;--sage-pale:#eef6ec;
+  --peach:#e8c9b8;--peach-light:#f5e4da;--peach-pale:#faf3ee;
+  --sand:#d4c4a8;--sand-light:#ede4d0;
+  --ink:#2e2b27;--ink-mid:#6e655e;--ink-light:#9c9088;--ink-pale:#c4bbb2;
+  --sky:#8bbcd0;--sky-light:#d8eef5;
+  --rose:#c4848e;--rose-light:#f0d8dc;
+  --yellow:#c8b860;--yellow-light:#f0eac8;
+  --lavender:#a898cc;--lavender-light:#e0d8f0;
+  --dark-bg:#1a1816;--dark-card:#252220;--dark-card2:#2e2b27;--dark-ink:#e4dcd4;--dark-ink-mid:#a8a098;
+  --radius:18px;--radius-sm:12px;--radius-xs:8px;
+  --shadow:0 2px 20px rgba(46,43,39,.06);--shadow-sm:0 1px 8px rgba(46,43,39,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);width:1024px;height:600px;overflow:hidden;color:var(--ink);font-size:13px;line-height:1.5;}
+body.dark{background:var(--dark-bg);color:var(--dark-ink);}
+body.dark .card{background:var(--dark-card);}
+body.dark .card-sm{background:var(--dark-card);}
+body.dark #sidebar{background:#131210;}
+body.dark .tab-btn.active{background:var(--dark-card2);}
+body.dark .p-input,body.dark .p-select{background:var(--dark-card2);color:var(--dark-ink);border-color:transparent;}
+body.dark .entry:hover{background:var(--dark-card2);}
+body.dark .cal-day{background:var(--dark-card2);}
+body.dark .bg-stripe{background:var(--dark-card2);}
+body.dark .modal-box{background:var(--dark-card);}
+body.dark .type-btn{background:var(--dark-card2);}
+body.dark .cfg-section{background:var(--dark-card2);}
+body.dark .goal-row,.body.dark .fixed-row{background:var(--dark-card2);}
+.app{display:flex;width:1024px;height:600px;overflow:hidden;}
+
+/* ── Sidebar ── */
+#sidebar{width:68px;flex-shrink:0;background:#eae6e0;display:flex;flex-direction:column;align-items:center;padding:12px 0 8px;border-right:1px solid rgba(0,0,0,.06);}
+.logo{font-size:20px;margin-bottom:12px;}
+.tab-nav{display:flex;flex-direction:column;gap:2px;flex:1;width:100%;padding:0 6px;}
+.tab-btn{width:100%;height:48px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:all .18s;}
+.tab-btn .ti{font-size:16px;line-height:1;opacity:.45;transition:.18s;}
+.tab-btn .tl{font-size:9px;font-weight:600;color:var(--ink-pale);letter-spacing:.01em;}
+.tab-btn:hover{background:rgba(255,255,255,.55);}
+.tab-btn.active{background:#fff;box-shadow:0 2px 10px rgba(46,43,39,.1);}
+.tab-btn.active .ti{opacity:1;}
+.tab-btn.active .tl{color:var(--ink-mid);}
+.tab-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 2px 2px 0;background:var(--sage);}
+.tab-btn{position:relative;}
+.sb-bottom{display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:2px;}
+.icon-btn{width:32px;height:32px;border-radius:10px;border:none;cursor:pointer;background:var(--sand-light);display:flex;align-items:center;justify-content:center;font-size:14px;transition:.15s;}
+.icon-btn:hover{background:var(--sand);}
+
+/* ── Layout ── */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.page{display:none;flex:1;flex-direction:column;padding:16px 18px;gap:10px;overflow:hidden;}
+.page.active{display:flex;}
+.row{display:flex;gap:10px;}
+.col{display:flex;flex-direction:column;gap:10px;}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);}
+.card-sm{background:var(--card);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);}
+.flex1{flex:1;min-width:0;}
+.scroll-y{overflow-y:auto;}
+.scroll-y::-webkit-scrollbar{width:3px;}
+.scroll-y::-webkit-scrollbar-thumb{background:var(--ink-pale);border-radius:99px;}
+
+/* ── Typography ── */
+.page-title{font-size:16px;font-weight:700;letter-spacing:-.02em;}
+.sec-label{font-size:10px;font-weight:700;color:var(--ink-light);letter-spacing:.02em;display:flex;align-items:center;gap:4px;}
+.lbl{font-size:10px;font-weight:600;color:var(--ink-light);}
+.amt-lg{font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1;}
+.amt-md{font-size:16px;font-weight:700;letter-spacing:-.02em;}
+
+/* ── Inputs ── */
+.p-input,.p-select{width:100%;padding:8px 12px;background:var(--bg);border:1.5px solid transparent;border-radius:var(--radius-xs);font-family:inherit;font-size:13px;color:var(--ink);outline:none;transition:.15s;}
+.p-input:focus,.p-select:focus{border-color:var(--sage);background:#fff;}
+.p-input::placeholder{color:var(--ink-pale);}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:var(--radius-xs);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;border:none;}
+.btn-primary{background:var(--sage);color:#fff;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{background:var(--bg);border:1.5px solid var(--ink-pale);color:var(--ink-mid);}
+.btn-secondary:hover{border-color:var(--sage);}
+.btn-danger{background:var(--rose-light);border:1.5px solid var(--rose);color:var(--rose);}
+.btn-danger:hover{background:var(--rose);color:#fff;}
+.btn-ghost{background:transparent;color:var(--ink-light);border:1.5px solid var(--ink-pale);}
+.btn-ghost:hover{border-color:var(--sage);color:var(--sage);}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:7px;}
+.btn-icon{width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.btn-icon-del{background:var(--rose-light);color:var(--rose);}
+.btn-icon-del:hover{background:var(--rose);color:#fff;}
+.btn-icon-edit{background:var(--sky-light);color:var(--sky);}
+.btn-icon-edit:hover{background:var(--sky);color:#fff;}
+.type-btn{flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;color:var(--ink-light);background:var(--bg);border:1.5px solid transparent;transition:.18s;}
+.type-btn.active-out{background:var(--rose-light);color:var(--rose);border-color:var(--rose);}
+.type-btn.active-in{background:var(--sage-light);color:var(--sage);border-color:var(--sage);}
+.pill{padding:5px 13px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-light);background:var(--card);border:1.5px solid transparent;transition:.18s;white-space:nowrap;}
+.pill.active{background:var(--sage-light);color:var(--sage);border-color:var(--sage);}
+.add-row-btn{border:2px dashed var(--ink-pale);padding:9px;border-radius:var(--radius-xs);font-size:12px;color:var(--ink-light);width:100%;cursor:pointer;background:transparent;font-family:inherit;font-weight:600;transition:.18s;text-align:center;}
+.add-row-btn:hover{border-color:var(--sage);color:var(--sage);}
+
+/* ── Toggle ── */
+.tog{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-slider{position:absolute;inset:0;background:var(--sand-light);border-radius:999px;cursor:pointer;transition:.2s;}
+.tog-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.tog input:checked+.tog-slider{background:var(--sage);}
+.tog input:checked+.tog-slider:before{transform:translateX(16px);}
+
+/* ── Entries ── */
+.entry{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;transition:.12s;cursor:pointer;}
+.entry:hover{background:var(--bg);}
+.e-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.e-title{font-size:13px;font-weight:600;color:var(--ink);}
+.e-meta{font-size:10.5px;color:var(--ink-pale);margin-top:1px;}
+.e-memo{font-size:10px;color:var(--ink-light);margin-top:1px;font-style:italic;}
+.e-amt{font-size:13px;font-weight:700;flex-shrink:0;}
+.e-out{color:var(--rose);}
+.e-in{color:var(--sage);}
+.e-actions{display:none;gap:4px;flex-shrink:0;}
+.entry:hover .e-actions{display:flex;}
+
+/* ── Progress ── */
+.prog-wrap{height:8px;border-radius:999px;background:var(--bg);overflow:hidden;}
+.prog-fill{height:100%;border-radius:999px;transition:width .4s;}
+
+/* ── Calendar ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-hd{font-size:9px;font-weight:700;color:var(--ink-light);text-align:center;padding:2px 0;}
+.cal-day{font-size:10px;padding:3px 2px 2px;border-radius:6px;text-align:center;background:var(--bg);cursor:pointer;transition:.12s;line-height:1.3;}
+.cal-day:hover{background:var(--sage-light);}
+.cal-day.has-val{background:var(--peach-light);}
+.cal-day .c-amt{display:block;font-size:7px;color:var(--rose);font-weight:700;}
+.cal-day.today{outline:2px solid var(--sage);outline-offset:-2px;font-weight:700;}
+.cal-day.empty{background:transparent;pointer-events:none;}
+.cal-day.sun{color:var(--rose);}
+.cal-day.sat{color:var(--sky);}
+.cal-day.selected{background:var(--sage-light);outline:2px solid var(--sage);outline-offset:-2px;}
+
+/* ── Day detail inline ── */
+.day-panel{display:none;background:var(--card);border:1.5px solid var(--sage-light);border-radius:10px;padding:8px 11px;margin-top:4px;animation:sd .16s ease;flex-direction:column;gap:5px;}
+.day-panel.open{display:flex;}
+@keyframes sd{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+.dp-row{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:7px;background:var(--bg);}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(46,43,39,.45);z-index:600;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--card);border-radius:22px;padding:22px;width:360px;box-shadow:0 16px 60px rgba(46,43,39,.2);display:flex;flex-direction:column;gap:12px;}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-close{width:26px;height:26px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;font-size:12px;color:var(--ink-mid);}
+
+/* ── Badges / Tags ── */
+.tag-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;background:var(--sage-pale);color:var(--sage);margin:1px;}
+.tag-pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:600;background:var(--sage-pale);color:var(--sage);margin:2px;}
+.tag-pill .tx{cursor:pointer;font-size:9px;color:var(--ink-light);}
+.tag-pill .tx:hover{color:var(--rose);}
+
+/* ── Settings ── */
+.cfg-section{background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.cfg-title{font-size:11px;font-weight:700;color:var(--ink-mid);}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cfg-lbl{font-size:12px;color:var(--ink-mid);}
+.cat-row{display:flex;gap:7px;align-items:center;padding:6px 8px;background:var(--bg);border-radius:10px;}
+.cat-emoji-btn{width:32px;height:32px;background:var(--card);border-radius:8px;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid var(--ink-pale);flex-shrink:0;}
+.cat-emoji-btn:hover{border-color:var(--sage);}
+.cat-del{width:24px;height:24px;}
+
+/* ── Emoji picker ── */
+.emoji-picker{position:absolute;background:#fff;border-radius:14px;padding:9px;box-shadow:0 8px 32px rgba(46,43,39,.15);z-index:400;display:none;flex-wrap:wrap;gap:2px;width:192px;}
+.emoji-picker.open{display:flex;}
+.emo{font-size:17px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.emo:hover{background:var(--sage-pale);}
+
+/* ── Goals ── */
+.goal-row{display:flex;flex-direction:column;gap:5px;padding:12px 13px;background:var(--bg);border-radius:12px;}
+.goal-prog{height:7px;border-radius:999px;background:#ddd;overflow:hidden;}
+.goal-prog-fill{height:100%;border-radius:999px;transition:width .4s;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:16px;right:16px;background:var(--sage);color:#fff;font-size:11px;font-weight:700;padding:7px 14px;border-radius:999px;box-shadow:0 4px 16px rgba(0,0,0,.12);opacity:0;transform:translateY(6px);transition:.22s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ── Summary stat cards ── */
+.stat-card{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stat-label{font-size:10px;font-weight:600;color:var(--ink-light);}
+.stat-val{font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.1;}
+.stat-sub{font-size:10px;color:var(--ink-pale);margin-top:1px;}
+
+/* ── Sort/Search bar ── */
+.search-bar{display:flex;align-items:center;gap:6px;}
+.search-input{flex:1;padding:7px 11px;background:var(--bg);border:1.5px solid transparent;border-radius:9px;font-family:inherit;font-size:12px;color:var(--ink);outline:none;transition:.15s;}
+.search-input:focus{border-color:var(--sage);background:#fff;}
+.search-input::placeholder{color:var(--ink-pale);}
+.sort-select{padding:7px 10px;background:var(--bg);border:1.5px solid transparent;border-radius:9px;font-family:inherit;font-size:12px;color:var(--ink-mid);outline:none;cursor:pointer;}
+
+/* ── Month nav ── */
+.month-nav{display:flex;align-items:center;gap:8px;}
+.month-nav-btn{padding:4px 11px;border-radius:999px;border:1.5px solid var(--ink-pale);background:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-mid);transition:.15s;}
+.month-nav-btn:hover{border-color:var(--sage);background:var(--sage-pale);}
+.month-label{font-size:13px;font-weight:700;color:var(--ink-mid);min-width:80px;text-align:center;}
+
+/* ── Bg stripe ── */
+.bg-stripe{background:var(--bg);border-radius:10px;}
+
+/* ── Input feedback ── */
+.input-fb{font-size:10px;padding:5px 10px;border-radius:7px;background:var(--sage-pale);color:var(--sage);font-weight:600;display:none;margin-top:3px;}
+.input-fb.show{display:block;}
+.input-fb.warn{background:var(--rose-light);color:var(--rose);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar">
+  <div class="logo">🤍</div>
+  <nav class="tab-nav">
+    <div class="tab-btn active" onclick="go(0)"><span class="ti">☀️</span><span class="tl">요약</span></div>
+    <div class="tab-btn" onclick="go(1)"><span class="ti">📋</span><span class="tl">내역</span></div>
+    <div class="tab-btn" onclick="go(2)"><span class="ti">✏️</span><span class="tl">입력</span></div>
+    <div class="tab-btn" onclick="go(3)"><span class="ti">📊</span><span class="tl">분석</span></div>
+    <div class="tab-btn" onclick="go(4)"><span class="ti">🎯</span><span class="tl">목표</span></div>
+    <div class="tab-btn" onclick="go(5)"><span class="ti">🌱</span><span class="tl">준우</span></div>
+    <div class="tab-btn" onclick="go(6)"><span class="ti">⚙️</span><span class="tl">설정</span></div>
+  </nav>
+  <div class="sb-bottom">
+    <button class="icon-btn" onclick="toggleDark()" id="dark-btn" title="다크모드">🌙</button>
+    <div style="font-size:8px;color:var(--ink-pale);font-weight:600;">v5.0</div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+
+<!-- ════ PAGE 0: 요약 ════ -->
+<div class="page active" id="page-0">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="page-title">준우네 가계부 ☀️</div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="changeMonth(-1)">← 이전</button>
+      <span class="month-label" id="summary-month-label">2026년 5월</span>
+      <button class="month-nav-btn" onclick="changeMonth(1)">다음 →</button>
+    </div>
+  </div>
+
+  <div class="row" style="flex:1;min-height:0;">
+    <!-- 왼쪽: 수입/지출/잔액 + 달력 -->
+    <div class="col" style="width:54%;">
+      <!-- 수입/지출/잔액 카드 -->
+      <div class="card" style="display:flex;gap:0;overflow:hidden;">
+        <div class="stat-card" style="border-right:1px solid var(--bg);">
+          <div class="stat-label">이번달 수입</div>
+          <div class="stat-val" style="color:var(--sage);" id="sum-income">3,200,000원</div>
+          <div class="stat-sub" id="sum-income-count">1건</div>
+        </div>
+        <div class="stat-card" style="border-right:1px solid var(--bg);">
+          <div class="stat-label">이번달 지출</div>
+          <div class="stat-val" style="color:var(--rose);" id="sum-expense">1,684,000원</div>
+          <div class="stat-sub" id="sum-expense-count">11건</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">잔액</div>
+          <div class="stat-val" style="color:var(--ink);" id="sum-balance">1,516,000원</div>
+          <div class="stat-sub" id="sum-budget-pct">예산 84% 소진</div>
+        </div>
+      </div>
+      <!-- 예산 프로그레스 -->
+      <div class="card-sm" style="padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="sec-label">📊 예산 현황</div>
+          <span style="font-size:10px;color:var(--ink-light);" id="budget-remain-lbl">남은 예산 316,000원</span>
+        </div>
+        <div class="prog-wrap"><div class="prog-fill" id="budget-prog" style="width:84%;background:var(--rose);"></div></div>
+        <div style="display:flex;justify-content:space-between;">
+          <div style="font-size:10px;color:var(--ink-light);">지출 1,684,000원</div>
+          <div style="font-size:10px;color:var(--ink-light);">예산 2,000,000원</div>
+        </div>
+      </div>
+      <!-- 달력 -->
+      <div class="card-sm" style="flex:1;padding:11px 13px;display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;">
+          <div class="sec-label">📅 일별 지출</div>
+          <div style="font-size:9px;color:var(--ink-pale);">클릭하면 내역 확인</div>
+        </div>
+        <div class="cal-grid" id="cal-headers">
+          <div class="cal-hd" style="color:var(--rose);">일</div>
+          <div class="cal-hd">월</div><div class="cal-hd">화</div><div class="cal-hd">수</div><div class="cal-hd">목</div><div class="cal-hd">금</div>
+          <div class="cal-hd" style="color:var(--sky);">토</div>
+        </div>
+        <div class="cal-grid" id="cal-body"></div>
+        <!-- 인라인 상세 -->
+        <div class="day-panel" id="day-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:4px;border-bottom:1px solid var(--bg);">
+            <span id="day-panel-title" style="font-size:11px;font-weight:700;color:var(--ink-mid);"></span>
+            <span id="day-panel-total" style="font-size:11px;font-weight:700;color:var(--rose);"></span>
+          </div>
+          <div id="day-panel-body" style="display:flex;flex-direction:column;gap:3px;max-height:58px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 도넛 + AI 코멘트 + 최근내역 -->
+    <div class="col flex1">
+      <!-- 도넛 -->
+      <div class="card" style="padding:14px;display:flex;gap:12px;align-items:center;">
+        <div style="position:relative;width:100px;height:100px;flex-shrink:0;">
+          <canvas id="donutChart" width="100" height="100"></canvas>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+            <div style="font-size:8.5px;color:var(--ink-light);">지출</div>
+            <div style="font-size:11px;font-weight:700;line-height:1.1;" id="donut-total">168만</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:5px;" id="donut-legend"></div>
+      </div>
+      <!-- AI 코멘트 -->
+      <div class="card-sm" style="padding:11px 13px;display:flex;gap:9px;align-items:flex-start;">
+        <span style="font-size:18px;flex-shrink:0;">💡</span>
+        <div>
+          <div class="lbl" style="margin-bottom:3px;">AI 소비 분석</div>
+          <div style="font-size:11.5px;font-weight:500;line-height:1.65;color:var(--ink-mid);" id="ai-comment">이번 달 면허 학원 등록과 이유식 식재료로 지출이 큽니다. 남은 기간 장보기 예산 집중 관리를 권장합니다.</div>
+        </div>
+      </div>
+      <!-- 최근 내역 -->
+      <div class="card-sm flex1" style="padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;">
+          <div class="sec-label">최근 내역</div>
+          <button onclick="go(1)" style="font-size:10px;color:var(--sage);background:none;border:none;cursor:pointer;font-weight:600;">전체보기 →</button>
+        </div>
+        <div class="scroll-y flex1" id="summary-recent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE 1: 내역 (수정/삭제 포함) ════ -->
+<div class="page" id="page-1">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div class="page-title" style="flex-shrink:0;">내역 관리</div>
+    <div class="search-bar flex1">
+      <input class="search-input" id="ledger-search" placeholder="🔍  내용, 카테고리 검색..." oninput="renderLedger()">
+      <select class="sort-select" id="ledger-sort" onchange="renderLedger()">
+        <option value="date-desc">날짜 최신순</option>
+        <option value="date-asc">날짜 오래된순</option>
+        <option value="amt-desc">금액 높은순</option>
+        <option value="amt-asc">금액 낮은순</option>
+      </select>
+      <select class="sort-select" id="ledger-type-filter" onchange="renderLedger()">
+        <option value="all">전체</option>
+        <option value="out">지출만</option>
+        <option value="in">수입만</option>
+      </select>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="changeMonth(-1)">←</button>
+      <span class="month-label" id="ledger-month-label" style="font-size:12px;">2026년 5월</span>
+      <button class="month-nav-btn" onclick="changeMonth(1)">→</button>
+    </div>
+  </div>
+
+  <div class="row flex1" style="min-height:0;">
+    <div class="card flex1" style="padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sec-label" id="ledger-label">전체 내역</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:var(--ink-light);" id="ledger-summary-line"></span>
+          <span style="font-size:10px;color:var(--ink-light);" id="ledger-page-indicator"></span>
+        </div>
+      </div>
+      <div class="scroll-y flex1" id="ledger-entries"></div>
+      <div style="display:flex;justify-content:center;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="ledgerPrev()">← 이전</button>
+        <button class="btn btn-secondary btn-sm" style="border-color:var(--sage);background:var(--sage-pale);" onclick="ledgerNext()">다음 →</button>
+      </div>
+    </div>
+    <!-- 카테고리 필터 -->
+    <div style="width:160px;display:flex;flex-direction:column;gap:8px;">
+      <div class="card-sm" style="padding:12px;display:flex;flex-direction:column;gap:6px;">
+        <div class="sec-label">카테고리</div>
+        <div id="ledger-cat-pills" style="display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+      <!-- 이번달 합산 -->
+      <div class="card-sm" style="padding:12px;display:flex;flex-direction:column;gap:7px;">
+        <div class="sec-label">이달 합산</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:var(--rose);">지출</span>
+          <span style="font-size:12px;font-weight:700;color:var(--rose);" id="ledger-total-out">−0원</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:var(--sage);">수입</span>
+          <span style="font-size:12px;font-weight:700;color:var(--sage);" id="ledger-total-in">+0원</span>
+        </div>
+        <div style="height:1px;background:var(--bg);"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;font-weight:700;">잔액</span>
+          <span style="font-size:13px;font-weight:700;" id="ledger-balance">0원</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE 2: 입력 ════ -->
+<div class="page" id="page-2" style="flex-direction:row;gap:10px;">
+  <!-- 입력 폼 -->
+  <div class="card" style="width:44%;padding:18px;display:flex;flex-direction:column;gap:10px;">
+    <div class="sec-label" id="input-form-title">✏️ 새 내역 입력</div>
+    <div style="display:flex;gap:6px;">
+      <div class="type-btn active-out" id="btn-out" onclick="setType('out')">지출</div>
+      <div class="type-btn" id="btn-in" onclick="setType('in')">수입</div>
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:3px;">날짜</div>
+      <input type="date" class="p-input" id="input-date" value="2026-05-06">
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:3px;">카테고리</div>
+      <select class="p-select" id="input-cat">
+        <option>🛒 식비/생활비</option>
+        <option>🍼 육아/이유식</option>
+        <option>📚 자기계발/교육</option>
+        <option>⛺ 캠핑/여가</option>
+        <option>🚗 교통/차량</option>
+      </select>
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:3px;">내용</div>
+      <input type="text" class="p-input" id="input-content" placeholder="예) 마트 장보기" oninput="onContentInput(this.value)">
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:3px;">금액</div>
+      <input type="number" class="p-input" id="input-amount" placeholder="0" oninput="onAmountInput(this.value)">
+      <div class="input-fb" id="budget-fb"></div>
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:3px;">메모 (선택)</div>
+      <input type="text" class="p-input" id="input-memo" placeholder="예) 이마트 행사 할인 적용">
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--bg);border-radius:10px;">
+      <div>
+        <div style="font-size:12px;font-weight:700;">준우 관련 🌱</div>
+        <div style="font-size:10px;color:var(--ink-pale);margin-top:1px;">이유식·교구·ETF 집계</div>
+      </div>
+      <label class="tog"><input type="checkbox" id="junwoo-toggle"><span class="tog-slider"></span></label>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:auto;">
+      <button class="btn btn-secondary flex1" id="cancel-edit-btn" onclick="cancelEdit()" style="display:none;">취소</button>
+      <button class="btn btn-primary flex1" onclick="saveEntry()" id="save-btn">저장하기 ✦</button>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 태그 + 최근내역 -->
+  <div class="col flex1">
+    <!-- 자동 태그 미리보기 -->
+    <div class="card-sm" style="padding:12px 14px;">
+      <div class="sec-label" style="margin-bottom:6px;">자동 태그 미리보기</div>
+      <div id="auto-tags" style="min-height:20px;"></div>
+    </div>
+    <!-- 자주 쓰는 태그 -->
+    <div class="card-sm" style="padding:12px 14px;display:flex;flex-direction:column;gap:7px;">
+      <div class="sec-label">자주 쓰는 태그</div>
+      <div id="quick-tags" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
+    </div>
+    <!-- 최근 입력 내역 (수정/삭제) -->
+    <div class="card-sm flex1" style="padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden;">
+      <div class="sec-label">최근 입력 내역</div>
+      <div class="scroll-y flex1" id="recent-entries"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE 3: 분석 ════ -->
+<div class="page" id="page-3">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="page-title">지출 분석</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="analysis-pills" style="display:flex;gap:5px;">
+        <div class="pill active" onclick="setAnalysisCat('전체',this)">전체</div>
+        <div class="pill" onclick="setAnalysisCat('육아',this)">🍼 육아</div>
+        <div class="pill" onclick="setAnalysisCat('생활',this)">🛒 생활</div>
+        <div class="pill" onclick="setAnalysisCat('캠핑',this)">⛺ 캠핑</div>
+        <div class="pill" onclick="setAnalysisCat('교통',this)">🚗 교통</div>
+        <div class="pill" onclick="setAnalysisCat('자기계발',this)">📚 자기계발</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+    </div>
+  </div>
+
+  <div class="row flex1" style="min-height:0;">
+    <!-- TOP3 + 요일 -->
+    <div style="width:38%;display:flex;flex-direction:column;gap:10px;">
+      <div class="card" style="padding:15px;display:flex;flex-direction:column;gap:10px;flex:1;">
+        <div class="sec-label">이번 달 TOP 3</div>
+        <div id="top3-list" style="display:flex;flex-direction:column;gap:10px;flex:1;"></div>
+      </div>
+      <div class="card-sm" style="padding:13px;">
+        <div class="sec-label" style="margin-bottom:8px;">요일별 지출</div>
+        <canvas id="weekdayChart" style="max-height:65px;"></canvas>
+      </div>
+      <div class="card-sm" style="padding:13px;">
+        <div class="sec-label" style="margin-bottom:8px;">이번달 vs 지난달</div>
+        <canvas id="compareChart" style="max-height:70px;"></canvas>
+      </div>
+    </div>
+    <!-- 리스트 -->
+    <div class="card flex1" style="padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sec-label" id="analysis-label">전체 지출 내역</div>
+        <span style="font-size:10px;color:var(--ink-light);" id="analysis-page-info"></span>
+      </div>
+      <div class="scroll-y flex1" id="analysis-entries"></div>
+      <div style="display:flex;justify-content:center;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="analysisPrev()">← 이전</button>
+        <button class="btn btn-secondary btn-sm" style="border-color:var(--sage);background:var(--sage-pale);" onclick="analysisNext()">다음 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE 4: 목표 ════ -->
+<div class="page" id="page-4" style="flex-direction:row;gap:10px;">
+  <div class="card flex1" style="padding:16px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+    <div class="sec-label">우리가족 장기 목표 🎯</div>
+    <div id="goal-list" class="scroll-y flex1" style="display:flex;flex-direction:column;gap:7px;"></div>
+    <button class="add-row-btn" onclick="addGoal()">+ 새 목표 추가</button>
+  </div>
+  <div class="card" style="width:44%;padding:16px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+    <div class="sec-label">고정 지출 🔁</div>
+    <div id="fixed-list" class="scroll-y flex1" style="display:flex;flex-direction:column;gap:6px;"></div>
+    <button class="add-row-btn" onclick="addFixed()">+ 고정지출 추가</button>
+  </div>
+</div>
+
+<!-- ════ PAGE 5: 준우 ════ -->
+<div class="page" id="page-5">
+  <div class="page-title">🌱 준우 리포트</div>
+  <div class="row flex1" style="min-height:0;">
+    <div class="col flex1">
+      <div style="display:flex;gap:9px;">
+        <div class="card-sm flex1" style="padding:13px;">
+          <div class="lbl">이번달 준우 지출</div>
+          <div class="amt-md" style="color:var(--rose);margin-top:5px;">639,000원</div>
+          <div style="font-size:10px;color:var(--ink-pale);margin-top:2px;">전체 지출 38%</div>
+        </div>
+        <div class="card-sm flex1" style="padding:13px;">
+          <div class="lbl">ETF 적립</div>
+          <div class="amt-md" style="color:var(--sky);margin-top:5px;">200만원</div>
+          <div style="font-size:10px;color:var(--ink-pale);margin-top:2px;">목표 500만 · 40%</div>
+          <div class="prog-wrap" style="height:5px;margin-top:7px;"><div class="prog-fill" style="width:40%;background:var(--sky);"></div></div>
+        </div>
+      </div>
+      <div class="card-sm" style="padding:13px;">
+        <div class="sec-label" style="margin-bottom:8px;">📈 월별 준우 지출 추이</div>
+        <canvas id="junwooChart" style="max-height:80px;"></canvas>
+      </div>
+      <div class="card-sm flex1" style="padding:13px;display:flex;flex-direction:column;gap:6px;overflow:hidden;">
+        <div class="sec-label">준우 지출 내역</div>
+        <div class="scroll-y flex1">
+          <div class="entry"><div class="e-icon" style="background:var(--yellow-light);">📈</div><div class="flex1"><div class="e-title">준우 S&P 500 ETF 매수</div><div class="e-meta">5월 1일 · 정기매수</div></div><div class="e-amt e-out">−₩200,000</div></div>
+          <div class="entry"><div class="e-icon" style="background:var(--lavender-light);">🥩</div><div class="flex1"><div class="e-title">초록마을 다짐육</div><div class="e-meta">5월 4일 · 후기이유식</div></div><div class="e-amt e-out">−₩45,000</div></div>
+          <div class="entry"><div class="e-icon" style="background:var(--rose-light);">🧷</div><div class="flex1"><div class="e-title">물티슈 캡/놀이재료</div><div class="e-meta">5월 3일 · 교구</div></div><div class="e-amt e-out">−₩12,000</div></div>
+          <div class="entry"><div class="e-icon" style="background:var(--peach-light);">🍼</div><div class="flex1"><div class="e-title">분유 및 이유식 재료</div><div class="e-meta">5월 1일 · 이유식</div></div><div class="e-amt e-out">−₩78,000</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="width:38%;display:flex;flex-direction:column;gap:10px;">
+      <div class="card-sm" style="padding:13px;display:flex;flex-direction:column;gap:9px;">
+        <div class="sec-label">🎯 목표 달성 예상</div>
+        <div style="background:var(--peach-pale);border-radius:11px;padding:11px;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:12px;font-weight:700;">📈 S&P 500 ETF 적립</div>
+          <div style="font-size:13px;font-weight:700;color:var(--sky);">2026년 10월 예정</div>
+          <div style="font-size:10px;color:var(--ink-pale);">월 20만 · 남은 300만</div>
+        </div>
+        <div style="background:var(--peach-pale);border-radius:11px;padding:11px;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:12px;font-weight:700;">🚐 카라반 자금</div>
+          <div style="font-size:13px;font-weight:700;color:var(--rose);">2026년 8월 예정</div>
+          <div style="font-size:10px;color:var(--ink-pale);">월 50만 · 남은 350만</div>
+        </div>
+      </div>
+      <div class="card-sm flex1" style="padding:13px;display:flex;flex-direction:column;gap:7px;">
+        <div class="sec-label">🍼 준우 카테고리</div>
+        <canvas id="junwooDonut" style="max-height:110px;"></canvas>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:10px;">
+          <div style="display:flex;justify-content:space-between;"><span>📈 ETF 적립</span><span style="font-weight:700;">31%</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>🥩 이유식</span><span style="font-weight:700;">48%</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>🧷 교구·용품</span><span style="font-weight:700;">21%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE 6: 설정 ════ -->
+<div class="page" id="page-6" style="flex-direction:row;gap:10px;position:relative;">
+  <div class="col flex1" style="overflow:hidden;">
+    <div class="card" style="flex:1;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+      <div class="sec-label">🏷️ 카테고리</div>
+      <div id="cat-list" class="scroll-y flex1" style="display:flex;flex-direction:column;gap:5px;"></div>
+      <button class="add-row-btn" onclick="addCategory()">+ 카테고리 추가</button>
+    </div>
+    <div class="card-sm" style="padding:13px;display:flex;flex-direction:column;gap:7px;">
+      <div class="sec-label">🔖 태그 관리</div>
+      <div id="tag-manage-list" style="display:flex;flex-wrap:wrap;gap:3px;min-height:20px;max-height:48px;overflow-y:auto;"></div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" class="p-input" id="new-tag-input" placeholder="#새태그" style="font-size:12px;padding:6px 10px;">
+        <button class="btn btn-secondary btn-sm" onclick="addTag()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col" style="flex:1.1;overflow:hidden;">
+    <div class="card" style="padding:13px;display:flex;flex-direction:column;gap:7px;">
+      <div class="sec-label">📅 월별 예산 (만원)</div>
+      <div id="budget-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;"></div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">🔔 설정</div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">예산 경고 기준 (%)</span>
+        <input type="number" class="p-input" id="cfg-alert-pct" style="width:75px;font-size:12px;padding:5px 8px;" value="80">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">다크모드</span>
+        <label class="tog"><input type="checkbox" id="cfg-dark-tog" onchange="toggleDarkFromCfg(this.checked)"><span class="tog-slider"></span></label>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">준우 탭 표시</span>
+        <label class="tog"><input type="checkbox" id="cfg-junwoo-tab" checked><span class="tog-slider"></span></label>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">💾 데이터</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 JSON 백업</button>
+        <button class="btn btn-ghost btn-sm" onclick="importJSON()">📂 복원</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmReset()">🗑️ 초기화</button>
+      </div>
+      <div style="font-size:10px;color:var(--ink-pale);" id="last-saved-label">마지막 저장: —</div>
+    </div>
+    <button class="btn btn-primary" id="cfg-save-btn" onclick="saveSettings()" style="width:100%;padding:10px;">💾 설정 저장</button>
+  </div>
+  <div id="emoji-picker" class="emoji-picker"></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── 수정 모달 ── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="modal-title">내역 수정</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <div class="type-btn active-out" id="edit-btn-out" onclick="editSetType('out')">지출</div>
+      <div class="type-btn" id="edit-btn-in" onclick="editSetType('in')">수입</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div class="lbl" style="margin-bottom:3px;">날짜</div><input type="date" class="p-input" id="edit-date"></div>
+      <div><div class="lbl" style="margin-bottom:3px;">금액</div><input type="number" class="p-input" id="edit-amount" placeholder="0"></div>
+    </div>
+    <div><div class="lbl" style="margin-bottom:3px;">카테고리</div>
+      <select class="p-select" id="edit-cat">
+        <option>🛒 식비/생활비</option><option>🍼 육아/이유식</option>
+        <option>📚 자기계발/교육</option><option>⛺ 캠핑/여가</option><option>🚗 교통/차량</option>
+      </select>
+    </div>
+    <div><div class="lbl" style="margin-bottom:3px;">내용</div><input type="text" class="p-input" id="edit-content"></div>
+    <div><div class="lbl" style="margin-bottom:3px;">메모</div><input type="text" class="p-input" id="edit-memo" placeholder="메모 (선택)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 11px;background:var(--bg);border-radius:9px;">
+      <span style="font-size:12px;font-weight:600;">준우 관련 🌱</span>
+      <label class="tog"><input type="checkbox" id="edit-junwoo"><span class="tog-slider"></span></label>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-danger flex1" onclick="deleteEntryFromModal()">삭제</button>
+      <button class="btn btn-primary flex1" onclick="saveEditModal()">수정 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ 저장됨</div>
+<input type="file" id="json-import-file" accept=".json" style="display:none" onchange="handleJSONImport(this)">
+
+<script>
+// ════ STORAGE ════
+const SK = 'junwoone_v5';
+let STATE = {
+  entries: [],
+  hashtags:['#후기이유식','#소고기다짐육','#준우관련','#카라반','#SP500','#내일배움카드','#마트','#장보기','#바리스타','#면허','#캠핑','#이유식','#강의'],
+  categories:[{emoji:'🍼',name:'육아 및 교육'},{emoji:'🛒',name:'생활 및 식비'},{emoji:'⛺',name:'캠핑 및 여가'},{emoji:'📚',name:'자기계발'},{emoji:'🚗',name:'교통 및 차량'}],
+  budgets:[200,180,200,190,200,200,180,200,200,190,200,220],
+  goals:[
+    {title:'준우 S&P 500 ETF 적립',desc:'올해 목표 500만원',current:200,target:500,color:'var(--sky)'},
+    {title:'카라반 기변 자금',desc:'650만 / 1000만원',current:650,target:1000,color:'var(--rose)'},
+    {title:'바리스타 자격증',desc:'내일배움카드 과정',current:100,target:100,color:'var(--sage)'},
+  ],
+  fixedItems:[
+    {date:'5',cat:'🍼 육아/이유식',cycle:'매월',content:'준우 ETF 정기 매수',amount:'200,000'},
+    {date:'25',cat:'🛒 식비/생활비',cycle:'매월',content:'생협 정기 주문',amount:'80,000'},
+  ],
+  settings:{alertPct:80,darkMode:false,showJunwooTab:true},
+  currentYear:2026, currentMonth:5,
+  nextId:1,
+};
+
+// ════ SAVE/LOAD ════
+let saveTimer;
+function autoSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(SK,JSON.stringify(STATE));showToast();updateLastSaved();}
+    catch(e){console.warn(e);}
+  },500);
+}
+function showToast(msg='✓ 저장됨'){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);
+}
+function updateLastSaved(){
+  const el=document.getElementById('last-saved-label');
+  if(el)el.textContent='마지막 저장: '+new Date().toLocaleTimeString('ko-KR');
+}
+function loadState(){
+  try{const r=localStorage.getItem(SK);if(r)Object.assign(STATE,JSON.parse(r));}
+  catch(e){console.warn(e);}
+}
+
+// ════ MONTH ════
+let isDark=false;
+function changeMonth(d){
+  STATE.currentMonth+=d;
+  if(STATE.currentMonth>12){STATE.currentMonth=1;STATE.currentYear++;}
+  if(STATE.currentMonth<1){STATE.currentMonth=12;STATE.currentYear--;}
+  const lbl=`${STATE.currentYear}년 ${STATE.currentMonth}월`;
+  const els=['summary-month-label','ledger-month-label'];
+  els.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
+  renderCalendar();renderSummary();renderLedger();autoSave();
+}
+
+// ════ TAB ════
+function go(i){
+  document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  closeEmoji();
+  if(i===0){renderSummary();if(!window._cR)initCharts();}
+  if(i===1)renderLedger();
+  if(i===2){renderQuickTags();renderRecentEntries();}
+  if(i===3){renderAnalysis();if(!window._wR)initWeekday();}
+  if(i===4){renderGoals();renderFixed();}
+  if(i===5&&!window._jR)initJunwooCharts();
+  if(i===6)renderSettings();
+}
+
+// ════ DARK MODE ════
+function toggleDark(){
+  isDark=!isDark;applyDark();
+  STATE.settings.darkMode=isDark;autoSave();
+}
+function toggleDarkFromCfg(v){isDark=v;applyDark();STATE.settings.darkMode=v;autoSave();}
+function applyDark(){
+  document.body.classList.toggle('dark',isDark);
+  document.getElementById('dark-btn').textContent=isDark?'☀️':'🌙';
+  const tog=document.getElementById('cfg-dark-tog');if(tog)tog.checked=isDark;
+}
+
+// ════ CALENDAR ════
+let selDayEl=null;
+function renderCalendar(){
+  const yr=STATE.currentYear,mo=STATE.currentMonth;
+  const first=new Date(yr,mo-1,1).getDay();
+  const days=new Date(yr,mo,0).getDate();
+  const today=new Date();
+  // group entries by day
+  const byDay={};
+  STATE.entries.filter(e=>{
+    const [ey,em]=e.date.split('-');return +ey===yr&&+em===mo&&e.type==='out';
+  }).forEach(e=>{const d=+e.date.split('-')[2];if(!byDay[d])byDay[d]=0;byDay[d]+=e.amt;});
+  let html='';
+  for(let i=0;i<first;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const dow=(first+d-1)%7;
+    const isToday=today.getFullYear()===yr&&today.getMonth()===mo-1&&today.getDate()===d;
+    const hasVal=byDay[d]>0;
+    const cls=['cal-day',dow===0?'sun':dow===6?'sat':'',hasVal?'has-val':'',isToday?'today':''].filter(Boolean).join(' ');
+    const amtStr=hasVal?`<span class="c-amt">${Math.round(byDay[d]/10000)}만</span>`:'';
+    html+=`<div class="${cls}" onclick="showDayDetail(${d},this)"><div>${d}</div>${amtStr}</div>`;
+  }
+  document.getElementById('cal-body').innerHTML=html;
+}
+function showDayDetail(d,el){
+  if(selDayEl===el){
+    el.classList.remove('selected');
+    document.getElementById('day-panel').classList.remove('open');
+    selDayEl=null;return;
+  }
+  if(selDayEl)selDayEl.classList.remove('selected');
+  el.classList.add('selected');selDayEl=el;
+  const yr=STATE.currentYear,mo=STATE.currentMonth;
+  const entries=STATE.entries.filter(e=>{
+    const [ey,em,ed]=e.date.split('-');return +ey===yr&&+em===mo&&+ed===d&&e.type==='out';
+  });
+  const total=entries.reduce((s,e)=>s+e.amt,0);
+  document.getElementById('day-panel-title').textContent=`${mo}월 ${d}일`;
+  document.getElementById('day-panel-total').textContent=entries.length?`합계 −₩${total.toLocaleString()}`:'내역 없음';
+  document.getElementById('day-panel-body').innerHTML=entries.length===0?
+    `<div style="font-size:10px;color:var(--ink-pale);">내역이 없습니다.</div>`:
+    entries.map(e=>`<div class="dp-row">
+      <span style="font-size:13px;">${e.icon}</span>
+      <span style="flex:1;font-size:11px;font-weight:600;">${e.title}</span>
+      <span style="font-size:11px;font-weight:700;color:var(--rose);">−₩${e.amt.toLocaleString()}</span>
+    </div>`).join('');
+  document.getElementById('day-panel').classList.add('open');
+}
+
+// ════ SUMMARY ════
+function renderSummary(){
+  const yr=STATE.currentYear,mo=STATE.currentMonth;
+  const month=STATE.entries.filter(e=>{const [ey,em]=e.date.split('-');return+ey===yr&&+em===mo;});
+  const income=month.filter(e=>e.type==='in').reduce((s,e)=>s+e.amt,0);
+  const expense=month.filter(e=>e.type==='out').reduce((s,e)=>s+e.amt,0);
+  const balance=income-expense;
+  const budget=(STATE.budgets[mo-1]||200)*10000;
+  const pct=Math.min(100,Math.round(expense/budget*100));
+  document.getElementById('sum-income').textContent=income.toLocaleString()+'원';
+  document.getElementById('sum-income-count').textContent=month.filter(e=>e.type==='in').length+'건';
+  document.getElementById('sum-expense').textContent=expense.toLocaleString()+'원';
+  document.getElementById('sum-expense-count').textContent=month.filter(e=>e.type==='out').length+'건';
+  document.getElementById('sum-balance').textContent=balance.toLocaleString()+'원';
+  document.getElementById('sum-balance').style.color=balance>=0?'var(--sage)':'var(--rose)';
+  document.getElementById('sum-budget-pct').textContent=`예산 ${pct}% 소진`;
+  document.getElementById('budget-prog').style.width=pct+'%';
+  document.getElementById('budget-prog').style.background=pct>=80?'var(--rose)':pct>=60?'var(--yellow)':'var(--sage)';
+  document.getElementById('budget-remain-lbl').textContent=`남은 예산 ${Math.max(0,budget-expense).toLocaleString()}원`;
+  // recent
+  const recent=STATE.entries.slice(0,5);
+  document.getElementById('summary-recent').innerHTML=renderEntryHTML(recent,false);
+  // donut
+  updateDonut(month.filter(e=>e.type==='out'));
+  renderCalendar();
+}
+function updateDonut(entries){
+  if(!window._cR)return;
+  const catMap={};
+  entries.forEach(e=>{catMap[e.cat]=(catMap[e.cat]||0)+e.amt;});
+  const sorted=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  const colors=['#c4848e','#e8c9b8','#8faf88','#8bbcd0','#a898cc','#c8b860'];
+  window._donutChart.data.datasets[0].data=sorted.map(([,v])=>v);
+  window._donutChart.data.datasets[0].backgroundColor=sorted.map((_,i)=>colors[i%colors.length]);
+  window._donutChart.update();
+  document.getElementById('donut-total').textContent=total>0?Math.round(total/10000)+'만':'0';
+  document.getElementById('donut-legend').innerHTML=sorted.slice(0,4).map(([k,v],i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="width:8px;height:8px;border-radius:2px;background:${colors[i%colors.length]};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-size:10px;color:var(--ink-mid);white-space:nowrap;">${k}</span>
+      </div>
+      <span style="font-size:10px;font-weight:700;">${total?Math.round(v/total*100):0}%</span>
+    </div>`).join('');
+}
+
+// ════ LEDGER (내역 탭) ════
+let ledgerPage=0,ledgerCat='전체';
+const LP=12;
+function getLedgerFiltered(){
+  const yr=STATE.currentYear,mo=STATE.currentMonth;
+  const q=(document.getElementById('ledger-search')||{}).value||'';
+  const sort=(document.getElementById('ledger-sort')||{}).value||'date-desc';
+  const typeF=(document.getElementById('ledger-type-filter')||{}).value||'all';
+  let arr=STATE.entries.filter(e=>{
+    const[ey,em]=e.date.split('-');
+    if(+ey!==yr||+em!==mo)return false;
+    if(ledgerCat!=='전체'&&!e.cat.includes(ledgerCat))return false;
+    if(typeF!=='all'&&e.type!==typeF)return false;
+    if(q&&!e.title.includes(q)&&!e.cat.includes(q)&&!(e.memo||'').includes(q))return false;
+    return true;
+  });
+  if(sort==='date-desc')arr.sort((a,b)=>b.date.localeCompare(a.date));
+  else if(sort==='date-asc')arr.sort((a,b)=>a.date.localeCompare(b.date));
+  else if(sort==='amt-desc')arr.sort((a,b)=>b.amt-a.amt);
+  else arr.sort((a,b)=>a.amt-b.amt);
+  return arr;
+}
+function renderLedger(){
+  const filtered=getLedgerFiltered();
+  const totalPages=Math.max(1,Math.ceil(filtered.length/LP));
+  ledgerPage=Math.min(ledgerPage,totalPages-1);
+  const slice=filtered.slice(ledgerPage*LP,ledgerPage*LP+LP);
+  // summary line
+  const outTotal=filtered.filter(e=>e.type==='out').reduce((s,e)=>s+e.amt,0);
+  const inTotal=filtered.filter(e=>e.type==='in').reduce((s,e)=>s+e.amt,0);
+  document.getElementById('ledger-total-out').textContent='−'+outTotal.toLocaleString()+'원';
+  document.getElementById('ledger-total-in').textContent='+'+inTotal.toLocaleString()+'원';
+  const bal=inTotal-outTotal;
+  const balEl=document.getElementById('ledger-balance');
+  balEl.textContent=bal.toLocaleString()+'원';
+  balEl.style.color=bal>=0?'var(--sage)':'var(--rose)';
+  document.getElementById('ledger-summary-line').textContent=`${filtered.length}건`;
+  document.getElementById('ledger-page-indicator').textContent=`${ledgerPage+1}/${totalPages}`;
+  document.getElementById('ledger-entries').innerHTML=renderEntryHTML(slice,true);
+  // cat pills
+  const cats=['전체',...new Set(STATE.entries.map(e=>e.cat))];
+  document.getElementById('ledger-cat-pills').innerHTML=cats.map(c=>`
+    <div class="pill${ledgerCat===c?' active':''}" style="text-align:center;width:100%;font-size:11px;" onclick="setLedgerCat('${c}',this)">${c}</div>`).join('');
+}
+function setLedgerCat(cat){ledgerCat=cat;ledgerPage=0;renderLedger();}
+function ledgerPrev(){if(ledgerPage>0){ledgerPage--;renderLedger();}}
+function ledgerNext(){const t=Math.ceil(getLedgerFiltered().length/LP);if(ledgerPage<t-1){ledgerPage++;renderLedger();}}
+
+// ════ ENTRY RENDER (shared) ════
+function renderEntryHTML(entries,showActions){
+  if(!entries.length)return'<div style="font-size:11px;color:var(--ink-pale);text-align:center;padding:20px 0;">내역이 없습니다.</div>';
+  return entries.map(e=>{
+    const clickAttr=showActions?'onclick="openEditModal('+e.id+')"':'';
+    const memoHtml=e.memo?'<div class="e-memo">'+e.memo+'</div>':'';
+    const junwooTag=e.junwoo?' · 🌱':'';
+    const amtClass=e.type==='in'?'e-in':'e-out';
+    const amtSign=e.type==='in'?'+':'−';
+    const dateStr=e.date.slice(5).replace('-','/');
+    return '<div class="entry" '+clickAttr+'>'+
+      '<div class="e-icon" style="background:'+e.bg+'">'+e.icon+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div class="e-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+e.title+'</div>'+
+        '<div class="e-meta">'+dateStr+' · '+e.cat+junwooTag+'</div>'+
+        memoHtml+
+      '</div>'+
+      '<div class="e-amt '+amtClass+'">'+amtSign+'₩'+e.amt.toLocaleString()+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ════ EDIT MODAL ════
+let editingId=null;
+let editType='out';
+function openEditModal(id){
+  const e=STATE.entries.find(e=>e.id===id);if(!e)return;
+  editingId=id;editType=e.type;
+  document.getElementById('edit-date').value=e.date;
+  document.getElementById('edit-amount').value=e.amt;
+  document.getElementById('edit-cat').value=[...document.getElementById('edit-cat').options].find(o=>o.value.includes(e.cat))?.value||document.getElementById('edit-cat').options[0].value;
+  document.getElementById('edit-content').value=e.title;
+  document.getElementById('edit-memo').value=e.memo||'';
+  document.getElementById('edit-junwoo').checked=e.junwoo;
+  editSetType(e.type);
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');editingId=null;}
+function editSetType(t){
+  editType=t;
+  document.getElementById('edit-btn-out').className='type-btn'+(t==='out'?' active-out':'');
+  document.getElementById('edit-btn-in').className='type-btn'+(t==='in'?' active-in':'');
+}
+function saveEditModal(){
+  if(!editingId)return;
+  const idx=STATE.entries.findIndex(e=>e.id===editingId);if(idx<0)return;
+  const amt=parseInt(document.getElementById('edit-amount').value)||0;
+  const cat=document.getElementById('edit-cat').value;
+  STATE.entries[idx]={
+    ...STATE.entries[idx],
+    date:document.getElementById('edit-date').value,
+    amt,
+    cat:cat.split(' ').slice(1).join('/'),
+    icon:cat.split(' ')[0],
+    title:document.getElementById('edit-content').value,
+    memo:document.getElementById('edit-memo').value,
+    junwoo:document.getElementById('edit-junwoo').checked,
+    type:editType,
+    bg:getBgForCat(cat),
+  };
+  autoSave();closeEditModal();
+  renderLedger();renderRecentEntries();renderSummary();
+  showToast('✓ 수정됨');
+}
+function deleteEntryFromModal(){
+  if(!editingId)return;
+  if(!confirm('이 내역을 삭제하시겠어요?'))return;
+  STATE.entries=STATE.entries.filter(e=>e.id!==editingId);
+  autoSave();closeEditModal();
+  renderLedger();renderRecentEntries();renderSummary();
+  showToast('🗑 삭제됨');
+}
+function getBgForCat(cat){
+  if(cat.includes('식비')||cat.includes('생활'))return'var(--peach-light)';
+  if(cat.includes('육아'))return'var(--lavender-light)';
+  if(cat.includes('자기계발'))return'var(--sage-pale)';
+  if(cat.includes('캠핑'))return'var(--sky-light)';
+  if(cat.includes('교통'))return'var(--rose-light)';
+  return'var(--sage-pale)';
+}
+document.getElementById('edit-modal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
+
+// ════ INPUT TAB ════
+let currentType='out';
+let editingEntryId=null;
+function setType(t){
+  currentType=t;
+  document.getElementById('btn-out').className='type-btn'+(t==='out'?' active-out':'');
+  document.getElementById('btn-in').className='type-btn'+(t==='in'?' active-in':'');
+}
+function onContentInput(val){
+  const words=val.trim().split(/\s+/).filter(w=>w.length>1);
+  document.getElementById('auto-tags').innerHTML=words.length?
+    words.map(w=>`<span class="tag-badge">#${w}</span>`).join(''):'<span style="font-size:10px;color:var(--ink-pale);">내용 입력 시 자동 생성</span>';
+}
+function onAmountInput(val){
+  const amt=parseInt(val)||0;
+  const mo=STATE.currentMonth;
+  const budget=(STATE.budgets[mo-1]||200)*10000;
+  const spent=STATE.entries.filter(e=>{const[,em]=e.date.split('-');return+em===mo&&e.type==='out';}).reduce((s,e)=>s+e.amt,0);
+  const fb=document.getElementById('budget-fb');
+  if(amt>0){
+    const pct=Math.round((spent+amt)/budget*100);
+    const isWarn=pct>=parseInt(STATE.settings.alertPct||80);
+    fb.textContent=`이 지출 후 소진율: ${pct}% · 남은 예산: ₩${Math.max(0,budget-spent-amt).toLocaleString()}`;
+    fb.className='input-fb show'+(isWarn?' warn':'');
+  }else{fb.className='input-fb';}
+}
+function saveEntry(){
+  const content=document.getElementById('input-content').value.trim();
+  const amount=parseInt(document.getElementById('input-amount').value)||0;
+  const date=document.getElementById('input-date').value;
+  if(!content||!amount){showToast('⚠ 내용과 금액을 입력하세요');return;}
+  const cat=document.getElementById('input-cat').value;
+  const memo=document.getElementById('input-memo').value.trim();
+  const isJunwoo=document.getElementById('junwoo-toggle').checked;
+  const icon=cat.split(' ')[0];
+  const entry={
+    id:STATE.nextId++,
+    cat:cat.split(' ').slice(1).join('/'),
+    icon,bg:getBgForCat(cat),
+    title:content,memo,
+    amt:amount,tags:[],
+    date,junwoo:isJunwoo,type:currentType,
+  };
+  STATE.entries.unshift(entry);
+  autoSave();
+  renderRecentEntries();renderSummary();
+  // reset
+  document.getElementById('input-content').value='';
+  document.getElementById('input-amount').value='';
+  document.getElementById('input-memo').value='';
+  document.getElementById('auto-tags').innerHTML='<span style="font-size:10px;color:var(--ink-pale);">내용 입력 시 자동 생성</span>';
+  document.getElementById('budget-fb').className='input-fb';
+  showToast('✓ 저장됨');
+}
+function cancelEdit(){
+  editingEntryId=null;
+  document.getElementById('input-form-title').textContent='✏️ 새 내역 입력';
+  document.getElementById('save-btn').textContent='저장하기 ✦';
+  document.getElementById('cancel-edit-btn').style.display='none';
+}
+function renderRecentEntries(){
+  const recent=STATE.entries.slice(0,8);
+  document.getElementById('recent-entries').innerHTML=renderEntryHTML(recent,true);
+}
+function renderQuickTags(){
+  document.getElementById('quick-tags').innerHTML=STATE.hashtags.slice(0,14).map(t=>
+    `<span class="tag-badge" style="cursor:pointer;" onclick="document.getElementById('input-content').value+=' ${t.replace('#','')}';">${t}</span>`).join('');
+}
+
+// ════ ANALYSIS TAB ════
+let analysisCat='전체',analysisPage=0;
+const APS=10;
+function setAnalysisCat(cat,el){
+  analysisCat=cat;analysisPage=0;
+  document.querySelectorAll('#analysis-pills .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');renderAnalysis();
+}
+function getAnalysisFiltered(){
+  const yr=STATE.currentYear,mo=STATE.currentMonth;
+  return STATE.entries.filter(e=>{
+    const[ey,em]=e.date.split('-');
+    if(+ey!==yr||+em!==mo||e.type!=='out')return false;
+    if(analysisCat!=='전체'&&!e.cat.includes(analysisCat))return false;
+    return true;
+  });
+}
+function renderAnalysis(){
+  const filtered=getAnalysisFiltered();
+  // TOP3
+  const top3=[...filtered].sort((a,b)=>b.amt-a.amt).slice(0,3);
+  const maxA=top3[0]?.amt||1;
+  const cols=['var(--rose)','var(--sky)','var(--sage)'];
+  document.getElementById('top3-list').innerHTML=top3.map((e,i)=>`
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:11.5px;font-weight:600;">${i+1}. ${e.title}</div>
+        <div style="font-size:11.5px;font-weight:700;color:${cols[i]};">₩${e.amt.toLocaleString()}</div>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill" style="width:${Math.round(e.amt/maxA*100)}%;background:${cols[i]};"></div></div>
+    </div>`).join('');
+  // list
+  const total=filtered.length;
+  const totalPages=Math.max(1,Math.ceil(total/APS));
+  analysisPage=Math.min(analysisPage,totalPages-1);
+  const slice=filtered.slice(analysisPage*APS,analysisPage*APS+APS);
+  document.getElementById('analysis-label').textContent=(analysisCat==='전체'?'전체':analysisCat)+' 지출 내역';
+  document.getElementById('analysis-page-info').textContent=`${analysisPage+1}/${totalPages}`;
+  document.getElementById('analysis-entries').innerHTML=renderEntryHTML(slice,true);
+}
+function analysisPrev(){if(analysisPage>0){analysisPage--;renderAnalysis();}}
+function analysisNext(){const t=Math.ceil(getAnalysisFiltered().length/APS);if(analysisPage<t-1){analysisPage++;renderAnalysis();}}
+
+// ════ GOALS ════
+const gcols=['var(--sky)','var(--rose)','var(--sage)','var(--lavender)','var(--peach)'];
+function renderGoals(){
+  document.getElementById('goal-list').innerHTML=STATE.goals.map((g,i)=>`
+    <div class="goal-row">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input class="p-input" style="flex:1;font-size:12px;padding:4px 8px;font-weight:700;" value="${g.title}" oninput="STATE.goals[${i}].title=this.value;autoSave()">
+        <div class="btn-icon btn-icon-del" onclick="deleteGoal(${i})">✕</div>
+      </div>
+      <input class="p-input" style="font-size:11px;padding:4px 8px;color:var(--ink-mid);" value="${g.desc}" oninput="STATE.goals[${i}].desc=this.value;autoSave()">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="goal-prog flex1"><div class="goal-prog-fill" style="width:${Math.min(100,Math.round(g.current/g.target*100))}%;background:${g.color};"></div></div>
+        <span style="font-size:10px;font-weight:700;color:${g.color};white-space:nowrap;">${Math.min(100,Math.round(g.current/g.target*100))}%${g.current>=g.target?' 🎉':''}</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:10px;color:var(--ink-light);">
+        현재 <input type="number" class="p-input" style="width:75px;padding:4px 7px;font-size:11px;" value="${g.current}" oninput="STATE.goals[${i}].current=+this.value;renderGoals();autoSave()">
+        / 목표 <input type="number" class="p-input" style="width:75px;padding:4px 7px;font-size:11px;" value="${g.target}" oninput="STATE.goals[${i}].target=+this.value;renderGoals();autoSave()">
+        만원
+      </div>
+    </div>`).join('');
+}
+function addGoal(){STATE.goals.push({title:'새 목표',desc:'목표 설명',current:0,target:100,color:gcols[STATE.goals.length%gcols.length]});renderGoals();autoSave();}
+function deleteGoal(i){STATE.goals.splice(i,1);renderGoals();autoSave();}
+
+// ════ FIXED ════
+const catOpts=['🛒 식비/생활비','🍼 육아/이유식','📚 자기계발/교육','⛺ 캠핑/여가','🚗 교통/차량'];
+const cycleOpts=['매일','매월','매년'];
+function renderFixed(){
+  document.getElementById('fixed-list').innerHTML=STATE.fixedItems.map((f,i)=>`
+    <div style="display:flex;flex-direction:column;gap:5px;padding:10px;background:var(--bg);border-radius:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;font-weight:700;color:var(--ink-mid);">고정지출 #${i+1}</span>
+        <div class="btn-icon btn-icon-del" onclick="deleteFixed(${i})">✕</div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+        <input type="number" class="p-input" style="width:50px;padding:4px 7px;font-size:11px;" value="${f.date}" min="1" max="31" oninput="STATE.fixedItems[${i}].date=this.value;autoSave()">
+        <span style="font-size:10px;color:var(--ink-light);">일</span>
+        <select class="p-select" style="width:110px;padding:4px 7px;font-size:11px;" onchange="STATE.fixedItems[${i}].cat=this.value;autoSave()">${catOpts.map(o=>`<option${o===f.cat?' selected':''}>${o}</option>`).join('')}</select>
+        <select class="p-select" style="width:65px;padding:4px 7px;font-size:11px;" onchange="STATE.fixedItems[${i}].cycle=this.value;autoSave()">${cycleOpts.map(o=>`<option${o===f.cycle?' selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <input type="text" class="p-input" style="flex:1;padding:4px 8px;font-size:11px;" value="${f.content}" oninput="STATE.fixedItems[${i}].content=this.value;autoSave()" placeholder="내용">
+        <input type="text" class="p-input" style="width:85px;padding:4px 8px;font-size:11px;" value="${f.amount}" oninput="STATE.fixedItems[${i}].amount=this.value;autoSave()" placeholder="금액">
+      </div>
+    </div>`).join('');
+}
+function addFixed(){STATE.fixedItems.push({date:'1',cat:'🛒 식비/생활비',cycle:'매월',content:'',amount:''});renderFixed();autoSave();}
+function deleteFixed(i){STATE.fixedItems.splice(i,1);renderFixed();autoSave();}
+
+// ════ SETTINGS ════
+function renderSettings(){
+  renderCats();renderBudgets();renderTagManage();
+  document.getElementById('cfg-alert-pct').value=STATE.settings.alertPct||80;
+  document.getElementById('cfg-dark-tog').checked=isDark;
+  document.getElementById('cfg-junwoo-tab').checked=STATE.settings.showJunwooTab!==false;
+}
+function renderCats(){
+  document.getElementById('cat-list').innerHTML='';
+  STATE.categories.forEach((cat,idx)=>{
+    const row=document.createElement('div');row.className='cat-row';
+    row.innerHTML=`<button class="cat-emoji-btn" onclick="openEmoji(event,${idx})">${cat.emoji}</button><input class="p-input" style="flex:1;font-size:12px;" value="${cat.name}" oninput="STATE.categories[${idx}].name=this.value"><div class="btn-icon btn-icon-del cat-del" onclick="deleteCat(${idx})">✕</div>`;
+    document.getElementById('cat-list').appendChild(row);
+  });
+}
+function renderBudgets(){
+  const M=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('budget-grid').innerHTML=M.map((m,i)=>`
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <label style="font-size:9px;font-weight:700;color:var(--ink-light);">${m}</label>
+      <input class="p-input" style="font-size:11px;padding:4px 7px;" type="number" value="${STATE.budgets[i]}" oninput="STATE.budgets[${i}]=+this.value">
+    </div>`).join('');
+}
+function renderTagManage(){
+  document.getElementById('tag-manage-list').innerHTML=STATE.hashtags.map((t,i)=>`
+    <span class="tag-pill">${t}<span class="tx" onclick="removeTag(${i})">✕</span></span>`).join('');
+}
+function addTag(){
+  const inp=document.getElementById('new-tag-input');
+  let v=inp.value.trim();if(!v)return;
+  if(!v.startsWith('#'))v='#'+v;
+  if(!STATE.hashtags.includes(v)){STATE.hashtags.push(v);renderTagManage();autoSave();}
+  inp.value='';
+}
+function removeTag(i){STATE.hashtags.splice(i,1);renderTagManage();autoSave();}
+function addCategory(){STATE.categories.push({emoji:'🎁',name:'새 카테고리'});renderCats();}
+function deleteCat(idx){if(STATE.categories.length<=1){return;}STATE.categories.splice(idx,1);renderCats();}
+let activeEmojiIdx=null;
+function openEmoji(e,idx){
+  e.stopPropagation();activeEmojiIdx=idx;
+  const pk=document.getElementById('emoji-picker');
+  const emojis=['🍼','🛒','⛺','🚗','📚','🏥','🎓','🍽️','🎮','🏠','💊','✈️','👗','💄','🐶','🎁','💰','🎵','🏋️','🧹','🎪','🌿','☕','🍕','🎨','🏕️','🌸','💻'];
+  pk.innerHTML=emojis.map(em=>`<span class="emo" onclick="pickEmoji('${em}')">${em}</span>`).join('');
+  const pr=document.getElementById('page-6').getBoundingClientRect();
+  const br=e.currentTarget.getBoundingClientRect();
+  pk.style.left=(br.left-pr.left)+'px';pk.style.top=(br.bottom-pr.top+4)+'px';
+  pk.classList.add('open');
+}
+function pickEmoji(em){if(activeEmojiIdx!==null){STATE.categories[activeEmojiIdx].emoji=em;renderCats();}closeEmoji();}
+function closeEmoji(){document.getElementById('emoji-picker')?.classList.remove('open');activeEmojiIdx=null;}
+document.addEventListener('click',closeEmoji);
+function saveSettings(){
+  STATE.settings.alertPct=parseInt(document.getElementById('cfg-alert-pct').value)||80;
+  STATE.settings.showJunwooTab=document.getElementById('cfg-junwoo-tab').checked;
+  autoSave();
+  const btn=document.getElementById('cfg-save-btn');
+  btn.textContent='✅ 저장 완료!';
+  setTimeout(()=>btn.textContent='💾 설정 저장',1800);
+}
+
+// ════ EXPORT/IMPORT ════
+function exportCSV(){
+  const rows=[['날짜','카테고리','내용','금액','메모','준우'],...STATE.entries.map(e=>[e.date,e.cat,e.title,e.amt,e.memo||'',e.junwoo?'O':'X'])];
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));
+  a.download='준우네_가계부.csv';a.click();
+}
+function exportJSON(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(STATE,null,2));
+  a.download='준우네_가계부_백업.json';a.click();
+}
+function importJSON(){document.getElementById('json-import-file').click();}
+function handleJSONImport(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{try{Object.assign(STATE,JSON.parse(e.target.result));autoSave();alert('✅ 복원 완료!');location.reload();}catch{alert('❌ 파일 오류');}};
+  r.readAsText(f);inp.value='';
+}
+function confirmReset(){if(confirm('⚠️ 모든 데이터 삭제. 확인?')){localStorage.removeItem(SK);location.reload();}}
+
+// ════ CHARTS ════
+window._cR=false;
+function initCharts(){
+  window._cR=true;
+  window._donutChart=new Chart(document.getElementById('donutChart').getContext('2d'),{
+    type:'doughnut',
+    data:{datasets:[{data:[38,28,20,14],backgroundColor:['#c4848e','#e8c9b8','#8faf88','#8bbcd0'],borderWidth:0,hoverOffset:4}]},
+    options:{cutout:'68%',plugins:{legend:{display:false}}}
+  });
+}
+window._wR=false;
+function initWeekday(){
+  window._wR=true;
+  new Chart(document.getElementById('weekdayChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:['일','월','화','수','목','금','토'],datasets:[{data:[320,85,62,110,45,198,285],backgroundColor:['#f0d8dc','#d8ebd4','#d8ebd4','#d8ebd4','#d8ebd4','#d8ebd4','#d8eef5'],borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#9c9088'}},y:{display:false}}}
+  });
+  new Chart(document.getElementById('compareChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:['육아','생활','캠핑','계발','교통'],
+      datasets:[
+        {label:'4월',data:[52,31,18,12,9],backgroundColor:'rgba(196,132,142,.35)',borderRadius:3},
+        {label:'5월',data:[38,28,20,14,10],backgroundColor:'rgba(196,132,142,.85)',borderRadius:3},
+      ]
+    },
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8.5},color:'#9c9088'}},y:{display:false}},barPercentage:.55,categoryPercentage:.7}
+  });
+}
+window._jR=false;
+function initJunwooCharts(){
+  window._jR=true;
+  new Chart(document.getElementById('junwooChart').getContext('2d'),{
+    type:'line',
+    data:{labels:['1월','2월','3월','4월','5월'],datasets:[{data:[420000,380000,510000,460000,639000],borderColor:'#c4848e',backgroundColor:'rgba(196,132,142,.1)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#c4848e'}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#9c9088'}},y:{display:false}}}
+  });
+  new Chart(document.getElementById('junwooDonut').getContext('2d'),{
+    type:'doughnut',
+    data:{datasets:[{data:[31,48,21],backgroundColor:['#8bbcd0','#e8c9b8','#f0d8dc'],borderWidth:0}]},
+    options:{cutout:'62%',plugins:{legend:{display:false}}}
+  });
+}
+
+// ════ INIT ════
+window.addEventListener('DOMContentLoaded',()=>{
+  loadState();
+  if(STATE.settings?.darkMode){isDark=true;applyDark();}
+  const lbl=`${STATE.currentYear}년 ${STATE.currentMonth}월`;
+  ['summary-month-label','ledger-month-label'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
+  initCharts();
+  renderSummary();
+  renderRecentEntries();
+  renderQuickTags();
+  updateLastSaved();
+});
+</script>
+</body>
+</html>
